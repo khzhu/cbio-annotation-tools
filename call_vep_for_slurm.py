@@ -15,15 +15,15 @@ def get_options():
                         default='vep_script')
     parser.add_argument("-f", "--fasta", type=str, required=False,
                         help="reference genome fasta file including path",
-                        default='/cluster/tools/data/genomes/human/hg19/iGenomes/Sequence/WholeGenomeFasta/genome.fa')
+                        default='/gpfs/data/igorlab/ref/hg19/genome.fa')
     parser.add_argument("-c", "--cache", type=str, required=False,
                         help="reference genome cache directory",
-                        default='/cluster/projects/pughlab/references/VEP_92_GRCh37_cache')
+                        default='/gpfs/data/abl/home/zhuh05/.vep')
     parser.add_argument("-g", "--gnomad", type=str, required=False,
                         help="Genome Aggregation Database (gnomAD) data",
-                        default='/cluster/projects/pughlab/references/gnomad/gnomad_v2.0.2/Exome/gnomad.exomes.r2.0.2.sites.vcf.gz')
+                        default='/gpfs/data/abl/home/zhuh05/gnomAD_v2/gnomad.exomes.r2.0.2.sites.vcf.gz')
     parser.add_argument("-v", "--vep", type=int, required=False,
-                        help="VEP version e.g 92", default=92)
+                        help="VEP version e.g 96", default=96)
     parser.add_argument("--forks", type=int, required=False,
                         help="number of forks", default=4)
     parser.add_argument("--offset", type=int, required=False,
@@ -41,11 +41,11 @@ def create_script(sh_file, cmd, version):
         of.write("#SBATCH -t 2:0:0\n")
         of.write("#SBATCH --mem=8G\n")
         of.write("#SBATCH -J mutctDNA\n")
-        of.write("#SBATCH -p all\n")
+        of.write("#SBATCH -p cpu_short\n")
         of.write("#SBATCH -c 4\n")
         of.write("#SBATCH -N 1\n")
         of.write("#SBATCH -o %x-%j.out\n")
-        of.write("module load perl/5.18.1\n")
+        of.write("module load perl/5.28.0\n")
         of.write("module load vep/%s\n"%version)
         of.write(cmd)
     print(sh_file)
@@ -100,7 +100,7 @@ def main():
     if args.debug:
         print (args)
 
-    s = Template('variant_effect_predictor.pl\
+    s = Template('vep \
                 --fork $forks\
                 --species homo_sapiens\
                 --offline\
@@ -110,7 +110,7 @@ def main():
                 --total_length\
                 --allele_number\
                 --no_escape\
-                --xref_refseq\
+                --refseq\
                 --buffer_size 256\
                 --dir $cache_dir\
                 --fasta $fasta\
