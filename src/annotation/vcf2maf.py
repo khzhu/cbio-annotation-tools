@@ -10,12 +10,12 @@ def get_options():
     parser.add_argument("--species", type=str, required=False,
                         help="Ensembl-friendly name of species (e.g. mus_musculus for mouse)", default="homo_sapiens")
     parser.add_argument("--vep_data", type=str, required=False,
-                        help="VEP's base cache/plugin directory", default='/cluster/projects/pughlab/references/VEP_92_GRCh37_cache')
+                        help="VEP's base cache/plugin directory", default='/gpfs/data/abl/home/zhuh05/.vep')
     parser.add_argument("--vep_path", type=str, required=False,
-                        help="Folder containing the vep script", default="/cluster/tools/software/vep/92/vep")
+                        help="Folder containing the vep script", default="/gpfs/share/apps/vep/raw/ensembl-vep/vep")
     parser.add_argument("-f", "--fasta", type=str, required=False,
                         help="Reference FASTA file including path",
-                        default="/cluster/tools/data/genomes/human/hg19/iGenomes/Sequence/WholeGenomeFasta/genome.fa")
+                        default="/gpfs/data/igorlab/ref/hg19/genome.fa")
     parser.add_argument("-i", "--input", type=str, required=True,
                         help="Path to input file in VCF format")
     parser.add_argument("-o", "--output", type=str, required=True,
@@ -23,33 +23,24 @@ def get_options():
     parser.add_argument("--ncbi_build", type=str,
                         help="NCBI genome build name e.g. GRCh37", default="GRCh37")
     parser.add_argument("--vcf_TUMOR", type=str, required=False,
-                        help="Tumor sample ID used in VCF's genotype columns", default="Tumour")
+                        help="Tumor sample ID used in VCF's genotype columns", default="TUMOR")
     parser.add_argument("--vcf_NORMAL", type=str, required=False,
-                        help="Matched normal ID used in VCF's genotype columns", default="Normal")
+                        help="Matched normal ID used in VCF's genotype columns", default="NORMAL")
     parser.add_argument("--maf_center", type=str, required=False,
-                        help="Variant calling center to report in MAF", default="MuTect")
+                        help="Variant calling center to report in MAF", default="MuTect2")
     parser.add_argument("--filter_vcf", type=str, required=False,
                         help="A VCF for FILTER common_variant.",
-                        default="/cluster/projects/pughlab/references/ExAC_GRCh37/ExAC.r0.3.sites.minus_somatic.vcf.gz")
+                        default="/gpfs/home/zhuh05/ablhome/ExAC/ExAC.r0.3.sites.vep.hg19.vcf.gz")
     parser.add_argument("--separator", type=str, required=False,
-                        help="Delimiter to separate sample ID", default="--")
+                        help="Delimiter to separate sample ID", default="_")
     parser.add_argument("-t", "--debug", action="store_true",
                         help="Debug mode for testing")
     return parser.parse_args()
 
-def get_sampleIDs_from_filename(sample_name, separator):
+def get_sampleIDs_from_filename(file_name, separator, pos):
     try:
-        return sample_name.strip().split(separator)
-    except:
-        return None, None
-
-def get_sampleIDs_from_oicr_vcf_header(vcf_file):
-    try:
-        p = subprocess.Popen(['grep', '##DCC=', vcf_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        parts = p.communicate()[0].split("\n")
-        sample_id = parts[1].split("=")[2].replace(">", '')
-        normal_id = parts[2].split("=")[2].replace(">", '')
-        return sample_id, normal_id
+        sample_id = file_name.strip().split(separator)[pos]
+        return sample_id, sample_id.replace("T","N")
     except:
         return None, None
 
@@ -66,7 +57,7 @@ def main():
     args = get_options()
     print(args)
     #run vcf2maf using the retain-info option to retain gnomAD AF_POPMAX allele frequencies
-    s = Template('perl /cluster/projects/pughlab/bin/vcf2maf/vcf2maf.pl\
+    s = Template('perl /gpfs/home/zhuh05/molecpathlab/bin/vcf2maf-1.6.17/vcf2maf.pl\
                     --species $species\
                     --ncbi-build $ncbi_build\
                     --input-vcf $input_vcf\
@@ -95,8 +86,7 @@ def main():
                 if os.path.exists(maf_file): continue
                 vep_file = os.path.join(vep_dir, file)
                 print (vep_file)
-                sample_id, normal_id = file.replace(".vcf",""), "Normal"
-                if not normal_id: continue
+                sample_id, normal_id = get_sampleIDs_from_filename(file, args.separator, 5)
                 print ("sample ID: {}".format(sample_id))
                 print ("matched normal ID: {}".format(normal_id))
 
@@ -110,8 +100,9 @@ def main():
                          vep_path=args.vep_path,
                          fasta=args.fasta,
                          filter_vcf = args.filter_vcf,
-                         vcf_TUMOR= sample_id,
-                         vcf_NORMAL=normal_id, tumor_id=sample_id,
+                         vcf_TUMOR= args.vcf_TUMOR,
+                         vcf_NORMAL=args.vcf_NORMAL,
+                         tumor_id=sample_id,
                          normal_id=normal_id)
                 cmd = s.substitute(d)
                 print (cmd)
@@ -126,14 +117,14 @@ def main():
                     of.write("#!/bin/bash\n")
                     of.write("#SBATCH -t 2:0:0\n")
                     of.write("#SBATCH --mem=8G\n")
-                    of.write("#SBATCH -J mutctDNA\n")
-                    of.write("#SBATCH -p all\n")
+                    of.write("#SBATCH -J NGS629_VEP\n")
+                    of.write("#SBATCH -p cpu_short\n")
                     of.write("#SBATCH -c 4\n")
                     of.write("#SBATCH -N 1\n")
                     of.write("#SBATCH -o %x-%j.out\n")
-                    of.write("module load perl/5.18.1\n")
-                    of.write("module load vep/92\n")
-                    of.write("module load samtools/1.3.1\n")
+                    of.write("module load perl/5.28.0\n")
+                    of.write("module load vep/96\n")
+                    of.write("module load samtools/1.9\n")
                     of.write(cmd)
                 print (out_file)
                 os.chmod(out_file, stat.S_IRWXU)
