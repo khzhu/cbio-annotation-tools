@@ -117,7 +117,7 @@ def main():
                     of.write("#!/bin/bash\n")
                     of.write("#SBATCH -t 2:0:0\n")
                     of.write("#SBATCH --mem=8G\n")
-                    of.write("#SBATCH -J NGS629_VEP\n")
+                    of.write("#SBATCH -J NGS_VEP\n")
                     of.write("#SBATCH -p cpu_short\n")
                     of.write("#SBATCH -c 4\n")
                     of.write("#SBATCH -N 1\n")
