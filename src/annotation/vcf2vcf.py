@@ -30,7 +30,7 @@ def main():
         for file in files:
             if file.endswith("vep.vcf"): continue
             if file.endswith("vcf"):
-                vcf_file = os.path.join(ouput_dir, "{}".format(file)))
+                vcf_file = os.path.join(ouput_dir, "{}".format(file))
                 if os.path.exists(vcf_file): continue
 
                 d = dict(fasta=args.fasta,
