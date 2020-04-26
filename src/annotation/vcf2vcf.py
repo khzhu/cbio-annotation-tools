@@ -6,6 +6,9 @@ from string import Template
 def get_options():
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("-f", "--fasta", type=str, required=False,
+                        help="Reference FASTA file including path",
+                        default="/gpfs/data/igorlab/ref/hg19/genome.fa")
     parser.add_argument("-i", "--input", type=str, required=True,
                         help="Path to input file, a VCF or VCF-like format")
     parser.add_argument("-o", "--output", type=str, required=True,
@@ -17,6 +20,7 @@ def main():
     print(args)
     # convert to a standardized VCF from a given VCF
     s = Template('perl /gpfs/data/molecpathlab/bin/vcf2maf-1.6.17/vcf2vcf.pl\
+                    --ref-fasta $fasta\
                     --input-vcf $input_vcf\
                     --output-vcf $output_vcf')
 
@@ -29,7 +33,7 @@ def main():
                 vcf_file = os.path.join(ouput_dir, "{}".format(file)))
                 if os.path.exists(vcf_file): continue
 
-                d = dict(
+                d = dict(fasta=args.fasta,
                          input_vcf = os.path.join(input_dir, file),
                          output_vcf = vcf_file)
                 cmd = s.substitute(d)
