@@ -10,7 +10,7 @@ def get_options():
     parser.add_argument("--species", type=str, required=False,
                         help="Ensembl-friendly name of species (e.g. mus_musculus for mouse)", default="homo_sapiens")
     parser.add_argument("--vep_data", type=str, required=False,
-                        help="VEP's base cache/plugin directory", default='/gpfs/data/abl/home/zhuh05/.vep')
+                        help="VEP's base cache/plugin directory", default='/gpfs/data/molecpathlab/ref/vep')
     parser.add_argument("--vep_path", type=str, required=False,
                         help="Folder containing the vep script", default="/gpfs/share/apps/vep/raw/ensembl-vep/vep")
     parser.add_argument("-f", "--fasta", type=str, required=False,
@@ -30,7 +30,7 @@ def get_options():
                         help="Variant calling center to report in MAF", default="MuTect2")
     parser.add_argument("--filter_vcf", type=str, required=False,
                         help="A VCF for FILTER common_variant.",
-                        default="/gpfs/home/zhuh05/ablhome/ExAC/ExAC.r0.3.sites.vep.hg19.vcf.gz")
+                        default="/gpfs/data/molecpathlab/ref/ExAC/ExAC.r0.3.sites.vep.hg19.vcf.gz")
     parser.add_argument("--separator", type=str, required=False,
                         help="Delimiter to separate sample ID", default="_")
     parser.add_argument("-t", "--debug", action="store_true",
