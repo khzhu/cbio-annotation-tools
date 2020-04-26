@@ -18,11 +18,11 @@ def main():
     # convert to a standardized VCF from a given VCF
     s = Template('perl /gpfs/data/molecpathlab/bin/vcf2maf-1.6.17/vcf2vcf.pl\
                     --input-vcf $input_vcf\
-                    --output-vcf $output_vcf\)
+                    --output-vcf $output_vcf')
 
     input_dir = args.input
     ouput_dir = args.output
-    for subdir, dirs, files in os.walk(vep_dir):
+    for subdir, dirs, files in os.walk(input_dir):
         for file in files:
             if file.endswith("vep.vcf"): continue
             if file.endswith("vcf"):
@@ -31,7 +31,7 @@ def main():
 
                 d = dict(
                          input_vcf = os.path.join(input_dir, file),
-                         out_vcf = vcf_file)
+                         output_vcf = vcf_file)
                 cmd = s.substitute(d)
                 print (cmd)
                 script_dir = os.path.join(ouput_dir, "vcf_script")
