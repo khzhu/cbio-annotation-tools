@@ -18,10 +18,10 @@ def get_options():
                         default='/gpfs/data/igorlab/ref/hg19/genome.fa')
     parser.add_argument("-c", "--cache", type=str, required=False,
                         help="reference genome cache directory",
-                        default='/gpfs/data/abl/home/zhuh05/.vep')
+                        default='/gpfs/data/molecpathlab/ref/vep')
     parser.add_argument("-g", "--gnomad", type=str, required=False,
                         help="Genome Aggregation Database (gnomAD) data",
-                        default='/gpfs/data/abl/home/zhuh05/gnomAD_v2/gnomad.exomes.r2.0.2.sites.vcf.gz')
+                        default='/gpfs/data/molecpathlab/ref/gnomAD_v2/gnomad.exomes.r2.0.2.sites.vcf.gz')
     parser.add_argument("-v", "--vep", type=int, required=False,
                         help="VEP version e.g 96", default=96)
     parser.add_argument("--forks", type=int, required=False,
