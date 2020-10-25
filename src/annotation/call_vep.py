@@ -15,7 +15,7 @@ def get_options():
                         default='vep_script')
     parser.add_argument("-f", "--fasta", type=str, required=False,
                         help="reference genome fasta file including path",
-                        default='/gpfs/data/igorlab/ref/hg19/genome.fa')
+                        default='/gpfs/data/molecpathlab/ref/BWA/hg19/genome.fa')
     parser.add_argument("-c", "--cache", type=str, required=False,
                         help="reference genome cache directory",
                         default='/gpfs/data/molecpathlab/ref/vep')
@@ -39,7 +39,7 @@ def create_script(sh_file, cmd, version):
     with open(sh_file, 'w') as of:
         of.write("#!/bin/bash\n")
         of.write("#SBATCH -t 2:0:0\n")
-        of.write("#SBATCH --mem=8G\n")
+        of.write("#SBATCH --mem=16G\n")
         of.write("#SBATCH -J NGS-VEP\n")
         of.write("#SBATCH -p cpu_short\n")
         of.write("#SBATCH -c 4\n")
@@ -133,7 +133,7 @@ def main():
                 script_dir = os.path.join(args.output, args.script_dir)
                 if not os.path.exists(script_dir):
                     try:
-                        os.mkdir(script_dir,0755)
+                        os.mkdir(script_dir,0o755)
                     except OSError as e:
                         print ("Error:Script directory exists")
 
