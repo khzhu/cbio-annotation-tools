@@ -23,7 +23,7 @@ def get_options():
                         help="Genome Aggregation Database (gnomAD) data",
                         default='/gpfs/data/molecpathlab/ref/gnomAD_v2/gnomad.exomes.r2.0.2.sites.vcf.gz')
     parser.add_argument("-v", "--vep", type=int, required=False,
-                        help="VEP version e.g 96", default=96)
+                        help="VEP version e.g 96", default=101)
     parser.add_argument("--forks", type=int, required=False,
                         help="number of forks", default=4)
     parser.add_argument("--offset", type=int, required=False,
