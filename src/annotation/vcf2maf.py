@@ -15,7 +15,7 @@ def get_options():
                         help="Folder containing the vep script", default="/gpfs/share/apps/vep/raw/ensembl-vep/vep")
     parser.add_argument("-f", "--fasta", type=str, required=False,
                         help="Reference FASTA file including path",
-                        default="/gpfs/data/igorlab/ref/hg19/genome.fa")
+                        default="/gpfs/data/molecpathlab/ref/BWA/hg19/genome.fa")
     parser.add_argument("-i", "--input", type=str, required=True,
                         help="Path to input file in VCF format")
     parser.add_argument("-o", "--output", type=str, required=True,
