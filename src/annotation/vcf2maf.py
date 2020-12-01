@@ -58,23 +58,23 @@ def main():
     print(args)
     #run vcf2maf using the retain-info option to retain gnomAD AF_POPMAX allele frequencies
     s = Template('perl /gpfs/home/zhuh05/molecpathlab/bin/vcf2maf-1.6.17/vcf2maf.pl\
-                    --species $species\
-                    --ncbi-build $ncbi_build\
-                    --input-vcf $input_vcf\
-                    --output-maf $out_maf\
-                    --maf-center $maf_center\
-                    --tumor-id $tumor_id\
-                    --normal-id $normal_id\
-                    --vcf-tumor-id $vcf_TUMOR\
-                    --vcf-normal-id $vcf_NORMAL\
-                    --vep-path $vep_path\
-                    --vep-data $vep_data\
-                    --ref-fasta $fasta\
-                    --filter-vcf $filter_vcf\
-                    --buffer-size 265\
-                    --max-filter-ac 10\
-                    --retain-info gnomAD_AF_POPMAX,gnomAD_AF_AFR,gnomAD_AF_AMR,gnomAD_AF_ASJ,gnomAD_AF_EAS,gnomAD_AF_FIN,gnomAD_AF_NFE,gnomAD_AF_OTH,gnomAD_AF_SAS\
-                    --min-hom-vaf 0.7')
+     --species $species\
+     --ncbi-build $ncbi_build\
+     --input-vcf $input_vcf\
+     --output-maf $out_maf\
+     --maf-center $maf_center\
+     --tumor-id $tumor_id\
+     --normal-id $normal_id\
+     --vcf-tumor-id $vcf_TUMOR\
+     --vcf-normal-id $vcf_NORMAL\
+     --vep-path $vep_path\
+     --vep-data $vep_data\
+     --ref-fasta $fasta\
+     --filter-vcf $filter_vcf\
+     --buffer-size 265\
+     --max-filter-ac 10\
+     --retain-info gnomAD_AF_POPMAX,gnomAD_AF_AFR,gnomAD_AF_AMR,gnomAD_AF_ASJ,gnomAD_AF_EAS,gnomAD_AF_FIN,gnomAD_AF_NFE,gnomAD_AF_OTH,gnomAD_AF_SAS\
+     --min-hom-vaf 0.7')
 
     vep_dir = args.input
     ouput_dir = args.output
@@ -123,8 +123,8 @@ def main():
                     of.write("#SBATCH -N 1\n")
                     of.write("#SBATCH -o %x-%j.out\n")
                     of.write("module load perl/5.28.0\n")
-                    of.write("module load vep/96\n")
-                    of.write("module load samtools/1.9\n")
+                    of.write("module load vep/101\n")
+                    of.write("module load samtools/1.10\n")
                     of.write(cmd)
                 print (out_file)
                 os.chmod(out_file, stat.S_IRWXU)
