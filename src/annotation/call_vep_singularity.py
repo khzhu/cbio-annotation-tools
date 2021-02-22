@@ -1,0 +1,153 @@
+import os
+import argparse
+from string import Template
+import subprocess
+
+def get_options():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--input", type=str, required=True,
+                        help="input vcf directory")
+    parser.add_argument("-o", "--output", type=str, required=True,
+                        help="vep output directory")
+    parser.add_argument("-s", "--script_dir", type=str, required=False,
+                        help="directory to store qsub script ",
+                        default='vep_script')
+    parser.add_argument("-f", "--fasta", type=str, required=False,
+                        help="reference genome fasta file including path",
+                        default='/ref/BWA/hg19/genome.fa')
+    parser.add_argument("-c", "--cache", type=str, required=False,
+                        help="reference genome cache directory",
+                        default='/ref/vep')
+    parser.add_argument("-g", "--gnomad", type=str, required=False,
+                        help="Genome Aggregation Database (gnomAD) data",
+                        default='/ref/gnomAD_v2/gnomad.exomes.r2.0.2.sites.vcf.gz')
+    parser.add_argument("-v", "--vep", type=int, required=False,
+                        help="VEP version e.g 101", default=101)
+    parser.add_argument("--forks", type=int, required=False,
+                        help="number of forks", default=8)
+    parser.add_argument("--offset", type=int, required=False,
+                        help="offset for split large vcf file", default=1000)
+    parser.add_argument("-t", "--split", action="store_true",
+                        help="split large vcf into smaller files")
+    parser.add_argument("-d", "--debug", action="store_true",
+                        help="debug mode print commands")
+    return parser.parse_args()
+
+
+def create_script(sh_file, cmd, version):
+    with open(sh_file, 'w') as of:
+        of.write("#!/bin/bash\n")
+        of.write("#SBATCH -t 2:0:0\n")
+        of.write("#SBATCH --mem=32G\n")
+        of.write("#SBATCH -J NGS-VEP\n")
+        of.write("#SBATCH -p cpu_short\n")
+        of.write("#SBATCH -c 8\n")
+        of.write("#SBATCH -N 1\n")
+        of.write("#SBATCH -o %x-%j.out\n")
+        of.write("module load singularity/3.1\n")
+        of.write(cmd)
+    print(sh_file)
+    os.system("chmod 755 %s" % sh_file)
+
+def get_header(vcf_file):
+    try:
+        p = subprocess.Popen(['grep', '#', vcf_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        return p.communicate()[0].strip().split("\n")
+    except:
+        return None
+
+def chop_header(vcf_file):
+    try:
+        p = subprocess.Popen(['grep', '-vP', '#', vcf_file], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        return p.communicate()[0].strip().split("\n")
+    except:
+        return None
+
+
+def get_line_count(vcf_file):
+    try:
+        p = subprocess.Popen(['wc','-l',vcf_file], stdin = subprocess.PIPE, stdout=subprocess.PIPE)
+        return p.communicate()[0].split()[0]
+    except:
+        return None
+
+def create_vcf(vcf_file, lines):
+    with open(vcf_file, 'w') as of:
+        for line in lines:
+            of.write("{}\n".format(line))
+
+def split_large_vcfs(vcf_dir, offset):
+    for subdir, dirs, files in os.walk(vcf_dir):
+        for file in files:
+            if not file.endswith('vcf'): continue
+            input_file = os.path.join(vcf_dir, file)
+            total_lines = get_line_count(input_file)
+            if int(total_lines) > offset:
+                header = get_header(input_file)
+                lines = chop_header(input_file)
+
+                for i in range(0, len(lines), offset):
+                    new_vcf = "{0}_{1}.vcf".format(input_file.replace(".vcf", ""), i)
+                    create_vcf(new_vcf, header + lines[i:i + offset])
+            try:
+                os.remove(input_file)
+            except: continue
+
+def main():
+    args = get_options()
+    if args.debug:
+        print (args)
+    s = Template('singularity exec --bind /gpfs/data/molecpathlab/ref:/ref,/gpfs/home/zhuh05/molecpathlab/development/NGS580-dev-kzhu/aris_lung/output/variant/mutect2/VCF-Mutect2/VEP:/output /gpfs/data/molecpathlab/containers/NGS580-nf/vep_101.simg vep \
+--fork $forks \
+--species homo_sapiens \
+--offline \
+--everything \
+--shift_hgvs 1 \
+--check_existing \
+--total_length \
+--allele_number \
+--no_escape \
+--refseq \
+--buffer_size 256 \
+--dir $cache_dir \
+--fasta $fasta \
+--input_file $infile \
+--force_overwrite \
+--custom $gnomad,gnomAD,vcf,exact,0,AF_POPMAX,AF_AFR,AF_AMR,AF_ASJ,AF_EAS,AF_FIN,AF_NFE,AF_OTH,AF_SAS \
+--vcf \
+--output_file $outfile')
+
+    if args.split:
+        split_large_vcfs(args.input, args.offset)
+
+    for subdir, dirs, files in os.walk(args.input):
+        for file in files:
+            if file.endswith(".vep.vcf"): continue
+            if file.endswith(".vcf"):
+                print (file)
+                input_file = os.path.join(args.input, file)
+                out_file = os.path.join(args.output, file.replace('vcf', 'vep.vcf'))
+                script_dir = os.path.join(args.output, args.script_dir)
+                if not os.path.exists(script_dir):
+                    try:
+                        os.mkdir(script_dir,0o755)
+                    except OSError as e:
+                        print ("Error:Script directory exists")
+
+                sh_file = os.path.join(script_dir, file.replace('vcf','sh'))
+
+                d = dict(cache_dir=args.cache,
+                         fasta=args.fasta,
+                         infile=os.path.join("/output",os.path.basename(input_file)),
+                         outfile=os.path.join("/output",os.path.basename(out_file)),
+                         forks=args.forks,
+                         gnomad=args.gnomad)
+                cmd = s.substitute(d)
+                if args.debug:
+                    print (cmd)
+
+                create_script(sh_file, cmd, args.vep)
+
+if __name__ == "__main__":
+    main()
